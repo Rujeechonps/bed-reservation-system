@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ระบบจองเตียงโรงพยาบาล</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Sarabun', sans-serif;
+      background-color: #fff;
+      display: flex;
+    }
+    .sidebar {
+      width: 240px;
+      background-color: #fef4f7;
+      padding: 20px; /* สามารถลดค่านี้ได้หากรู้สึกว่ามีช่องว่างด้านบนมากไป */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-right: 1px solid #eee;
+      min-height: 100vh;
+    }
+    .sidebar img {
+      width: 120px;
+      margin-bottom: 15px;
+    }
+    .menu {
+      width: 100%;
+    }
+    .menu-item {
+      padding: 10px 15px;
+      margin: 5px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+      font-family: 'Sarabun', sans-serif; /* แก้ไข: เปลี่ยนจาก cursive เป็น sans-serif */
+    }
+    .menu-item i {
+      margin-right: 8px; /* ระยะห่างระหว่างไอคอนกับข้อความ */
+    }
+    .menu-item:hover {
+      background-color: #ffe2eb;
+    }
+    .main-content {
+      flex: 1;
+      padding: 30px; /* สามารถลดค่านี้ได้หากรู้สึกว่ามีช่องว่างด้านบนมากไป */
+      display: flex;
+      flex-direction: column; /* Changed to column to stack dashboard and content */
+    }
+    /* Styles for the fixed dashboard */
+    .dashboard-fixed {
+        width: 100%;
+        margin-bottom: 20px; /* Space between dashboard and changeable content */
+        text-align: center;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #444;
+    }
+    .title {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    .bed-dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    .bed-card {
+      background-color: #fdf1f5;
+      border: 2px dashed #f39caa;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      width: 200px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+    }
+    .bed-card h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+    .bed-card span {
+      font-size: 20px;
+      font-weight: bold;
+      color: #d94b6d;
+    }
+    .section-content {
+      display: none;
+      flex: 1; /* Allows it to take remaining space */
+      min-height: 0; /* Prevents overflow with flex-column */
+    }
+    .section-content.active-section {
+      display: block;
+    }
+    .form-container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #fef4f7;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .form-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #d94b6d;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+      color: #444;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #c0392b;
+    }
+    .success-msg {
+      text-align: center;
+      background-color: #2ecc71;
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 20px;
+      display: none;
+      font-size: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background-color: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    table th, table td {
+      padding: 12px 14px;
+      text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    thead {
+      background-color: #fce4ec;
+      color: #d81b60;
+      font-weight: bold;
+    }
+    tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+    td button {
+      margin: 0 4px;
+    }
+    td:last-child {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+    .sidebar button.active {
+      background-color: #d81b60;
+      color: white;
+      font-weight: bold;
+    }
+    .menu-item.active {
+      background-color: #d81b60;
+      color: white;
+      font-weight: bold;
+    }
+    .filter-buttons {
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    .filter-buttons button {
+        margin: 5px;
+        padding: 8px 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f0f0f0;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        font-size: 14px;
+        color: #333;
+        margin-top: 0px; /* Reset margin-top from general button style */
+    }
+    .filter-buttons button:hover, .filter-buttons button.active {
+        background-color: #d81b60;
+        color: white;
+        border-color: #d81b60;
+    }
+
+    /* Modal styles */
+    .modal-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        width: 400px;
+        text-align: center;
+    }
+    .modal-content h3 {
+        margin-top: 0;
+        color: #d94b6d;
+    }
+    .modal-content label {
+        display: block;
+        text-align: left;
+        margin-top: 10px;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .modal-content input, .modal-content select {
+        width: calc(100% - 22px);
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+    .modal-buttons {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+    }
+    .modal-buttons button {
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 0; /* Override general button margin */
+    }
+    .modal-buttons button:first-child {
+        background-color: #28a745;
+        color: white;
+    }
+    .modal-buttons button:first-child:hover {
+        background-color: #218838;
+    }
+    .modal-buttons button:last-child {
+        background-color: #dc3545;
+        color: white;
+    }
+    .modal-buttons button:last-child:hover {
+        background-color: #c82333;
+    }
+
+    /* Daily Summary Table specific styles */
+    #dailySummaryBody td {
+        vertical-align: middle; /* จัดให้เนื้อหาในเซลล์อยู่กึ่งกลางแนวตั้ง */
+    }
+    #dailySummaryBody td:nth-child(2), /* จำนวนผู้ป่วยที่แอดมิด */
+    #dailySummaryBody td:nth-child(3) { /* จำนวนเตียงคงเหลือ */
+        text-align: center;
+    }
+    #dailySummaryBody td:nth-child(5), /* Plan Discharge */
+    #dailySummaryBody td:nth-child(6) { /* Discharge ฝากนอน */
+        text-align: center;
+    }
+    /* เพิ่มสไตล์สำหรับ div ภายในเซลล์แพทย์เพื่อให้จัดเรียงได้ดีขึ้น */
+    #dailySummaryBody td:nth-child(4) {
+        text-align: left; /* จัดแพทย์ให้อยู่ชิดซ้ายของเซลล์ */
+    }
+    #dailySummaryBody td:nth-child(4) div {
+        margin-bottom: 2px; /* ระยะห่างระหว่างบรรทัดของแพทย์แต่ละคน */
+    }
+    #dailySummaryBody td:nth-child(4) div:last-child {
+        margin-bottom: 0;
+    }
+#dailySummaryBody td:nth-child(1),
+#dailySummaryBody td:nth-child(2),
+#dailySummaryBody td:nth-child(3),
+#dailySummaryBody td:nth-child(4),
+#dailySummaryBody td:nth-child(5),
+#dailySummaryBody td:nth-child(6) {
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+    min-width: 80px;
+    display: table-cell;
+}
+
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <img src="https://www.jvnkp.go.th/wp-content/uploads/2017/08/jvnkp-179x300-179x300.png" alt="โลโก้โรงพ hospitals">
+    <div class="menu">
+      <div class="menu-item active" data-target="form" onclick="showSection('form')"><i class="fas fa-bed"></i> จองเตียง</div>
+      <div class="menu-item" data-target="bookingTable" onclick="showSection('bookingTable')"><i class="fas fa-book-medical"></i> ตารางแสดงข้อมูลการจองเตียง</div>
+      <div class="menu-item" data-target="admitTable" onclick="showSection('admitTable')"><i class="fas fa-hospital-user"></i> ตารางผู้ป่วยที่แอดมิดแล้ว</div>
+      <div class="menu-item" data-target="planDischargeTable" onclick="showSection('planDischargeTable')"><i class="fas fa-calendar-alt"></i> ตารางผู้ป่วยที่ Plan Discharge</div>
+      <div class="menu-item" data-target="dischargeTable" onclick="showSection('dischargeTable')"><i class="fas fa-sign-out-alt"></i> ตารางผู้ป่วย Discharge ฝากนอน</div>
+      <div class="menu-item" data-target="reAdmitTable" onclick="showSection('reAdmitTable')"><i class="fas fa-redo-alt"></i> ตารางผู้ป่วย Re-Admit</div> <div class="menu-item" data-target="bookingSummary" onclick="showSection('bookingSummary')"><i class="fas fa-clipboard-list"></i> ตารางสรุปยอดการจอง</div>
+      <div class="menu-item" data-target="dailySummary" onclick="showSection('dailySummary')"><i class="fas fa-chart-bar"></i> ตารางสรุปยอดรายวัน</div>
+      <div class="menu-item" onclick="resetData()"><i class="fas fa-sync-alt"></i> รีเซ็ตข้อมูล</div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="dashboard-fixed">
+      <div class="subtitle">โรงพยาบาลจิตเวชนครพนมราชนครินทร์</div>
+      <div class="title">ระบบจองเตียง <br>จำนวนเตียงคงเหลือ</div>
+      <div class="bed-dashboard">
+        <div class="bed-card"><h3>ตึกชาย 1 คงเหลือ</h3><span id="bed1">35 เตียง</span></div>
+        <div class="bed-card"><h3>ตึกชาย 2 คงเหลือ</h3><span id="bed2">35 เตียง</span></div>
+        <div class="bed-card"><h3>ตึกชายฟื้นฟู คงเหลือ</h3><span id="bed3">30 เตียง</span></div>
+        <div class="bed-card"><h3>ตึกหญิง คงเหลือ</h3><span id="bed4">30 เตียง</span></div>
+      </div>
+    </div>
+
+    <div id="form" class="section-content active-section">
+      <h2 class="section-header">ฟอร์มจองเตียง</h2>
+      <div class="form-container">
+        <form id="bookingForm">
+          <label>ชื่อ-สกุลผู้ป่วย</label><input type="text" id="name" required>
+          <label>HN</label><input type="text" id="hn" required>
+          <label>AN</label><input type="text" id="an" required>
+          <label>แพทย์</label>
+          <select id="doctor">
+            <option value="รอข้อมูล">รอข้อมูล</option>
+            <option value="แพทย์วรท">แพทย์วรท</option>
+            <option value="แพทย์ศักรินทร์">แพทย์ศักรินทร์</option>
+            <option value="แพทย์บรูณ์สุดา">แพทย์บรูณ์สุดา</option>
+            <option value="แพทย์ปรีชา">แพทย์ปรีชา</option>
+            <option value="แพทย์ปวีณา">แพทย์ปวีณา</option>
+          </select>
+          <label>ตึก</label>
+          <select id="building">
+            <option value="รอข้อมูล">รอข้อมูล</option>
+            <option value="ตึกชาย1">ตึกชาย1</option>
+            <option value="ตึกชาย2">ตึกชาย2</option>
+            <option value="ตึกหญิง">ตึกหญิง</option>
+            <option value="ตึกชายฟื้นฟู">ตึกชายฟื้นฟู</option>
+          </select>
+          <label>วันที่จอง</label><input type="date" id="date" required>
+          <button type="submit">จองเตียง</button>
+        </form>
+        <div id="success" class="success-msg">✅ จองเตียงสำเร็จ!</div>
+      </div>
+    </div>
+
+    <div id="bookingTable" class="section-content">
+      <h2 class="section-header">ตารางการจองเตียง</h2>
+      <table>
+        <thead>
+          <tr><th>ชื่อ</th><th>HN</th><th>AN</th><th>แพทย์</th><th>ตึก</th><th>วันที่จอง</th><th>สถานะ</th></tr>
+        </thead>
+        <tbody id="bookingDataBody"></tbody>
+      </table>
+    </div>
+
+    <div id="admitTable" class="section-content">
+      <h2 class="section-header">ตารางผู้ป่วยที่แอดมิดแล้ว</h2>
+      <div class="filter-buttons">
+          <button class="active" onclick="filterAdmitTable('all', this)">ดูทั้งหมด</button>
+          <button onclick="filterAdmitTable('ตึกชาย1', this)">ดูตึกชาย 1</button>
+          <button onclick="filterAdmitTable('ตึกชาย2', this)">ดูตึกชาย 2</button>
+          <button onclick="filterAdmitTable('ตึกหญิง', this)">ดูตึกหญิง</button>
+          <button onclick="filterAdmitTable('ตึกชายฟื้นฟู', this)">ดูตึกชายฟื้นฟู</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ชื่อ</th>
+            <th>HN</th>
+            <th>AN</th>
+            <th>แพทย์</th>
+            <th>ตึก</th>
+            <th>วันที่แอดมิด</th>
+            <th>สถานะ</th> <th>หมายเหตุ</th>
+          </tr>
+        </thead>
+        <tbody id="admitDataBody"></tbody>
+      </table>
+    </div>
+
+    <div id="planDischargeTable" class="section-content">
+      <h2 class="section-header">ตารางผู้ป่วยที่ Plan Discharge</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ชื่อ</th>
+            <th>HN</th>
+            <th>AN</th>
+            <th>แพทย์</th>
+            <th>ตึก</th>
+            <th>วันที่แอดมิด</th>
+            <th>สถานะ</th>
+          </tr>
+        </thead>
+        <tbody id="planDischargeBody"></tbody>
+      </table>
+    </div>
+
+    <div id="dischargeTable" class="section-content">
+      <h2 class="section-header">ตารางผู้ป่วย Discharge ฝากนอน</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ชื่อ</th>
+            <th>HN</th>
+            <th>AN</th>
+            <th>แพทย์</th>
+            <th>ตึก</th>
+            <th>วันที่แอดมิด</th>
+            <th>สถานะ</th>
+            <th></th> <th></th> </tr>
+        </thead>
+        <tbody id="dischargeBody"></tbody>
+      </table>
+    </div>
+
+    <div id="reAdmitTable" class="section-content">
+        <h2 class="section-header">ตารางผู้ป่วย Re-Admit</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ชื่อ</th>
+                    <th>HN</th>
+                    <th>AN</th>
+                    <th>แพทย์</th>
+                    <th>ตึก</th>
+                    <th>วันที่ Re-Admit</th>
+                    <th>สถานะ</th>
+                    <th>ผู้ป่วยเดิม (Discharge)</th>
+                </tr>
+            </thead>
+            <tbody id="reAdmitBody"></tbody>
+        </table>
+    </div>
+    <div id="bookingSummary" class="section-content">
+      <h2 class="section-header">ตารางสรุปยอดการจอง</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>วันที่</th>
+            <th>จองเข้ามา (คน)</th>
+            <th>ได้แอดมิด (คน)</th>
+            <th>รอแอดมิด (คน)</th>
+          </tr>
+        </thead>
+        <tbody id="bookingSummaryBody">
+          </tbody>
+      </table>
+    </div>
+
+    <div id="dailySummary" class="section-content">
+      <h2 class="section-header">ตารางสรุปยอดรายวัน</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ชื่อตึกผู้ป่วย</th>
+            <th>จำนวนผู้ป่วยที่แอดมิด</th>
+            <th>จำนวนเตียงคงเหลือ</th>
+            <th>แพทย์ผู้รับผิดชอบ</th>
+            <th>Plan Discharge</th>
+            <th>Discharge ฝากนอน</th>
+          </tr>
+        </thead>
+        <tbody id="dailySummaryBody">
+          </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    // Global array เพื่อเก็บข้อมูลผู้ป่วยทั้งหมด
+    // โครงสร้าง: { id: 'unique_id', name: 'ชื่อ', hn: 'HN', an: 'AN', doctor: 'แพทย์', building: 'ตึก', bookDate: 'YYYY-MM-DD', admitDate: 'YYYY-MM-DD', status: 'booked' | 'admitted' | 'planDischarge' | 'discharged' | 'finalDischarged' | 'reAdmitted' }
+    let allPatients = [];
+
+    // กำหนดจำนวนเตียงเริ่มต้นของแต่ละตึก
+    const initialBedCounts = {
+      "ตึกชาย1": 35,
+      "ตึกชาย2": 35,
+      "ตึกชายฟื้นฟู": 30,
+      "ตึกหญิง": 30
+    };
+    // ตัวแปรสำหรับเก็บจำนวนเตียงคงเหลือปัจจุบัน (จะอัปเดตเมื่อแอดมิด/discharge)
+    let currentBedCounts = { ...initialBedCounts };
+
+    // ฟังก์ชันสำหรับหา ID ของเตียงจากชื่อตึก
+    function getBuildingId(name) {
+      return {
+        "ตึกชาย1": "bed1",
+        "ตึกชาย2": "bed2",
+        "ตึกชายฟื้นฟู": "bed3",
+        "ตึกหญิง": "bed4"
+      }[name] || "";
+    }
+
+    // ดึงรายชื่อแพทย์ทั้งหมดจาก select option
+    const doctorSelectElement = document.getElementById('doctor');
+    const allDoctors = doctorSelectElement ?
+      Array.from(doctorSelectElement.options)
+        .filter(option => option.value !== 'รอข้อมูล')
+        .map(option => option.value) : [];
+
+
+    // ฟังก์ชันสำหรับสลับการแสดงผลของส่วนต่างๆ
+    function showSection(sectionId) {
+      // ซ่อนทุก section-content
+      document.querySelectorAll('.section-content').forEach(section => {
+        section.classList.remove('active-section');
+      });
+
+      // ลบ active class จาก menu-item ทั้งหมด
+      document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+      });
+
+      // แสดง section ที่ต้องการ
+      const activeSection = document.getElementById(sectionId);
+      if (activeSection) {
+        activeSection.classList.add('active-section');
+      }
+
+      // เพิ่ม active class ให้กับ menu-item ที่ถูกคลิก
+      const clickedMenuItem = document.querySelector(`.menu-item[data-target="${sectionId}"]`);
+      if (clickedMenuItem) {
+        clickedMenuItem.classList.add('active');
+      }
+
+      // เมื่อเปลี่ยน Section ให้เรียกฟังก์ชัน update ตารางที่เกี่ยวข้อง
+      if (sectionId === 'bookingTable') {
+        renderBookingTable();
+      } else if (sectionId === 'admitTable') {
+        // ให้ปุ่ม "ดูทั้งหมด" เป็น Active เมื่อเข้าสู่หน้า Admit Table
+        const allButton = document.querySelector('#admitTable .filter-buttons button:first-child');
+        filterAdmitTable('all', allButton);
+      } else if (sectionId === 'planDischargeTable') {
+        renderPlanDischargeTable();
+      } else if (sectionId === 'dischargeTable') {
+        renderDischargeTable();
+      } else if (sectionId === 'reAdmitTable') { // เพิ่ม case สำหรับ Re-Admit Table
+        renderReAdmitTable();
+      } else if (sectionId === 'bookingSummary') {
+        updateBookingSummaryTable();
+      } else if (sectionId === 'dailySummary') {
+        updateDailySummaryTable();
+      }
+      // Dashboard ไม่ต้องเรียก updateDashboardBedCounts() ตรงนี้ เพราะมันค้างอยู่เสมอ
+    }
+
+    // ฟังก์ชันสำหรับอัปเดตจำนวนเตียงคงเหลือใน Dashboard
+    function updateDashboardBedCounts() {
+      for (const buildingName in currentBedCounts) {
+        const bedId = getBuildingId(buildingName);
+        const bedSpan = document.getElementById(bedId);
+        if (bedSpan) {
+          bedSpan.textContent = currentBedCounts[buildingName] + " เตียง";
+        }
+      }
+      saveDataToLocalStorage();
+    }
+
+    // ฟังก์ชันสำหรับอัปเดตจำนวนเตียง
+    function updateBedCount(buildingName, increment) {
+        if (currentBedCounts.hasOwnProperty(buildingName)) {
+            currentBedCounts[buildingName] += (increment ? 1 : -1);
+            updateDashboardBedCounts();
+        } else {
+            console.warn(`ไม่พบตึก: ${buildingName} ใน currentBedCounts`);
+        }
+    }
+
+    // ฟังก์ชันสำหรับสร้างปุ่ม "แอดมิด" ในตารางการจอง
+    function createAdmitButton(patientId) {
+        const button = document.createElement("button");
+        button.textContent = "แอดมิด";
+        button.style.cssText = "background-color: #28a745; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; min-width: 60px;";
+        button.onmouseover = () => button.style.backgroundColor = "#218838";
+        button.onmouseout = () => button.style.backgroundColor = "#28a745";
+
+        button.onclick = () => {
+            const patient = allPatients.find(p => p.id === patientId);
+            if (!patient) {
+                alert("ไม่พบข้อมูลผู้ป่วย");
+                return;
+            }
+
+            // สร้าง Modal Background
+            const modalBg = document.createElement("div");
+            modalBg.className = "modal-bg";
+            document.body.appendChild(modalBg);
+
+            // สร้าง Modal Content
+            const modalContent = document.createElement("div");
+            modalContent.className = "modal-content";
+            modalBg.appendChild(modalContent);
+
+            modalContent.innerHTML = `
+                <h3>ยืนยันการแอดมิด</h3>
+                <label>ชื่อ-สกุลผู้ป่วย</label><input type="text" id="modalName" value="${patient.name}" disabled>
+                <label>HN</label><input type="text" id="modalHN" value="${patient.hn}">
+                <label>AN</label><input type="text" id="modalAN" value="${patient.an}">
+                <label>แพทย์</label>
+                <select id="modalDoctor">
+                    ${allDoctors.map(doc => `<option value="${doc}" ${patient.doctor === doc ? 'selected' : ''}>${doc}</option>`).join('')}
+                </select>
+                <label>ตึก</label>
+                <select id="modalBuilding">
+                    <option value="ตึกชาย1" ${patient.building === 'ตึกชาย1' ? 'selected' : ''}>ตึกชาย1</option>
+                    <option value="ตึกชาย2" ${patient.building === 'ตึกชาย2' ? 'selected' : ''}>ตึกชาย2</option>
+                    <option value="ตึกหญิง" ${patient.building === 'ตึกหญิง' ? 'selected' : ''}>ตึกหญิง</option>
+                    <option value="ตึกชายฟื้นฟู" ${patient.building === 'ตึกชายฟื้นฟู' ? 'selected' : ''}>ตึกชายฟื้นฟู</option>
+                </select>
+                <div class="modal-buttons">
+                    <button id="confirmAdmitBtn">ยืนยันแอดมิด</button>
+                    <button id="cancelAdmitBtn">ยกเลิก</button>
+                </div>
+            `;
+
+            document.getElementById("confirmAdmitBtn").onclick = () => {
+                if (patient.status === 'booked') { // ตรวจสอบสถานะอีกครั้งก่อนแอดมิด
+                    // Update patient data from modal inputs
+                    const originalBuilding = patient.building; // ตึกเดิม
+                    patient.hn = document.getElementById("modalHN").value;
+                    patient.an = document.getElementById("modalAN").value;
+                    patient.doctor = document.getElementById("modalDoctor").value;
+                    patient.building = document.getElementById("modalBuilding").value;
+
+                    // ตรวจสอบจำนวนเตียงก่อนแอดมิด
+                    if (currentBedCounts[patient.building] <= 0) {
+                        alert(`เตียงสำหรับตึก ${patient.building} เต็มแล้ว ไม่สามารถแอดมิดได้`);
+                        return;
+                    }
+
+                    // ถ้ามีการเปลี่ยนตึกใน Modal ต้องอัปเดตจำนวนเตียงให้ถูกต้อง
+                    if (originalBuilding !== patient.building) {
+                        // คืนเตียงให้ตึกเดิม (ถ้าตึกเดิมเคยถูกจองไว้)
+                        // Note: If patient was booked, no bed was taken yet. So no need to increment originalBuilding bed count.
+                        // We only decrement the new building's bed count.
+                        updateBedCount(patient.building, false); // ลดเตียงจากตึกใหม่
+                    } else {
+                        // ถ้าตึกไม่เปลี่ยน ก็ลดเตียงจากตึกเดิมได้เลย
+                        updateBedCount(patient.building, false);
+                    }
+
+                    patient.status = 'admitted';
+                    patient.admitDate = new Date().toISOString().slice(0, 10); // วันที่แอดมิด
+
+                    // ลบแถวออกจากตารางจอง
+                    const rowToRemove = document.querySelector(`#bookingDataBody tr[data-patient-id="${patientId}"]`);
+                    if (rowToRemove) rowToRemove.remove();
+
+                    // อัปเดตตาราง Admit และ Summary ทันที
+                    filterAdmitTable('all', document.querySelector('#admitTable .filter-buttons button:first-child'));
+                    updateDailySummaryTable();
+                    updateBookingSummaryTable();
+                    modalBg.remove();
+                    alert("✅ แอดมิดสำเร็จ!");
+                    saveDataToLocalStorage();
+                } else if (patient.status === 'admitted') {
+                    modalBg.remove();
+                    alert("ผู้ป่วยคนนี้ถูกแอดมิดไปแล้ว");
+                }
+            };
+
+            document.getElementById("cancelAdmitBtn").onclick = () => {
+                modalBg.remove();
+            };
+        };
+        return button;
+    }
+
+    // ฟังก์ชันสำหรับสร้างปุ่มสถานะในตารางผู้ป่วยที่แอดมิดแล้ว
+    function createStatusButtons(patientId) {
+      const td = document.createElement("div"); // ใช้ div แทน td เพื่อให้จัดวางปุ่มง่ายขึ้น
+      td.style.display = "flex";
+      td.style.justifyContent = "center";
+      td.style.gap = "6px";
+
+      const btnBack = document.createElement("button");
+      btnBack.textContent = "กลับบ้าน";
+      btnBack.style.cssText = "background-color: #3498db; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; min-width: 70px;";
+      btnBack.onmouseover = () => btnBack.style.backgroundColor = "#2980b9";
+      btnBack.onmouseout = () => btnBack.style.backgroundColor = "#3498db";
+
+      btnBack.onclick = () => {
+        const patient = allPatients.find(p => p.id === patientId);
+        if (patient) {
+          // ถ้าสถานะเป็น admitted หรือ planDischarge หรือ discharged
+          // จะต้องคืนเตียงถ้ายังไม่เคยคืน (คือจากสถานะ admitted หรือ planDischarge)
+          if (patient.status === 'admitted' || patient.status === 'planDischarge') {
+              updateBedCount(patient.building, true); // เพิ่มจำนวนเตียงคืน
+          }
+          patient.status = 'finalDischarged'; // สถานะสุดท้ายคือออกจากระบบแล้ว
+
+          // ลบแถวออกจากตาราง admitTable
+          const rowToRemove = document.querySelector(`#admitDataBody tr[data-patient-id="${patientId}"]`);
+          if (rowToRemove) rowToRemove.remove();
+          renderPlanDischargeTable(); // อัปเดตตาราง Plan Discharge (เผื่อผู้ป่วยถูก Plan Discharge มาก่อนแล้วกดกลับบ้านจาก Admit table)
+          renderDischargeTable(); // อัปเดตตาราง Discharge ฝากนอน
+
+          updateDailySummaryTable();
+          updateBookingSummaryTable();
+          alert("✅ กลับบ้าน และคืนเตียงแล้ว");
+          saveDataToLocalStorage();
+        }
+      };
+
+      const btnPlan = document.createElement("button");
+      btnPlan.textContent = "Plan Discharge";
+      btnPlan.style.cssText = "background-color: #f39c12; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; min-width: 90px;";
+      btnPlan.onmouseover = () => btnPlan.style.backgroundColor = "#e67e22";
+      btnPlan.onmouseout = () => btnPlan.style.backgroundColor = "#f39c12";
+
+      btnPlan.onclick = () => {
+        const patient = allPatients.find(p => p.id === patientId);
+        if (patient && patient.status === 'admitted') { // ถ้ายังอยู่ในสถานะแอดมิด
+          patient.status = 'planDischarge';
+
+          // อัปเดตช่องหมายเหตุในตาราง admitTable
+          const admitRow = document.querySelector(`#admitDataBody tr[data-patient-id="${patientId}"]`);
+          if (admitRow) {
+            // ช่องหมายเหตุคือช่องที่ 7 (0-indexed) ใน HTML เดิม แต่ตอนนี้ถูกย้ายไปอยู่ช่องสุดท้ายก่อนปุ่ม
+            // ดังนั้นต้องหา cell ที่มีปุ่มสถานะอยู่ (last cell) แล้วย้อนกลับไป 1 cell
+            const noteCellIndex = admitRow.cells.length - 1; // ช่องหมายเหตุคือช่องสุดท้าย (index 7)
+            const noteCell = admitRow.cells[noteCellIndex];
+            if (noteCell) noteCell.textContent = 'Plan Discharge';
+          }
+          renderPlanDischargeTable(); // อัปเดตตาราง Plan Discharge ทันที
+          updateDailySummaryTable();
+          alert("✅ Plan Discharge สำเร็จ");
+          saveDataToLocalStorage();
+        } else if (patient && patient.status === 'planDischarge') {
+            alert("ผู้ป่วยคนนี้อยู่ในสถานะ Plan Discharge อยู่แล้ว");
+        } else if (patient && patient.status !== 'admitted') {
+            alert("ผู้ป่วยคนนี้ไม่ได้อยู่ในสถานะแอดมิด");
+        }
+      };
+
+      const btnDischarge = document.createElement("button");
+      btnDischarge.textContent = "Discharge ฝากนอน";
+      btnDischarge.style.cssText = "background-color: #e74c3c; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; min-width: 110px;";
+      btnDischarge.onmouseover = () => btnDischarge.style.backgroundColor = "#c0392b";
+      btnDischarge.onmouseout = () => btnDischarge.style.backgroundColor = "#e74c3c";
+
+      btnDischarge.onclick = () => {
+        const patient = allPatients.find(p => p.id === patientId);
+        // แก้ไข: ให้สามารถกด Discharge ฝากนอน ได้ทั้งจากสถานะ 'admitted' และ 'planDischarge'
+        if (patient && (patient.status === 'admitted' || patient.status === 'planDischarge')) {
+          // ตรวจสอบว่าเตียงถูกคืนแล้วหรือไม่ก่อนที่จะคืนอีกครั้ง (กรณีมาจาก Plan Discharge เตียงอาจจะยังไม่ถูกคืน)
+          // หรือ ถ้ามาจาก admitted ก็ต้องคืนเตียง
+          if (patient.status === 'admitted' || patient.status === 'planDischarge') { // ตรงนี้หมายถึงสถานะที่เตียงยังถูกครองอยู่
+            updateBedCount(patient.building, true); // คืนเตียง
+          }
+          patient.status = 'discharged'; // เปลี่ยนสถานะเป็น Discharge ฝากนอน
+
+          // ลบแถวออกจากตาราง admitTable
+          const rowToRemove = document.querySelector(`#admitDataBody tr[data-patient-id="${patientId}"]`);
+          if (rowToRemove) rowToRemove.remove();
+          renderDischargeTable(); // อัปเดตตาราง Discharge ฝากนอน ทันที
+          renderPlanDischargeTable(); // อัปเดตตาราง Plan Discharge ด้วย (เผื่อผู้ป่วยคนนี้แสดงอยู่ในนั้น)
+
+          updateDailySummaryTable();
+          updateBookingSummaryTable();
+          alert("✅ Discharge ฝากนอน และคืนเตียงแล้ว");
+          saveDataToLocalStorage();
+        } else if (patient && patient.status === 'discharged') {
+            alert("ผู้ป่วยคนนี้อยู่ในสถานะ Discharge ฝากนอน อยู่แล้ว");
+        } else { // ครอบคลุมกรณีอื่น เช่น finalDischarged หรือ booked
+            alert("ผู้ป่วยคนนี้ไม่อยู่ในสถานะที่สามารถ Discharge ฝากนอนได้");
+        }
+      };
+
+      td.appendChild(btnBack);
+      td.appendChild(btnPlan);
+      td.appendChild(btnDischarge);
+      return td;
+    }
+
+    // ฟังก์ชันสำหรับสร้างปุ่ม "Re-Admit"
+ function createReAdmitButton(patientId) {
+    const button = document.createElement("button");
+    button.textContent = "Re-Admit";
+    button.style.cssText = "background-color: #007bff; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; min-width: 70px;";
+    button.onmouseover = () => button.style.backgroundColor = "#0056b3";
+    button.onmouseout = () => button.style.backgroundColor = "#007bff";
+
+    button.onclick = () => {
+        const patient = allPatients.find(p => p.id === patientId);
+        if (!patient) {
+            alert("ไม่พบข้อมูลผู้ป่วย");
+            return;
+        }
+
+        if (patient.status !== 'discharged') {
+            alert("ผู้ป่วยคนนี้ไม่อยู่ในสถานะ 'Discharge ฝากนอน' ที่จะสามารถ Re-Admit ได้");
+            return;
+        }
+
+        // Modal
+        const modalBg = document.createElement("div");
+        modalBg.className = "modal-bg";
+        document.body.appendChild(modalBg);
+
+        const modalContent = document.createElement("div");
+        modalContent.className = "modal-content";
+        modalBg.appendChild(modalContent);
+
+        modalContent.innerHTML = `
+            <h3>ยืนยันการ Re-Admit</h3>
+            <label>ชื่อ-สกุลผู้ป่วย</label><input type="text" id="modalReAdmitName" value="${patient.name}" disabled>
+            <label>HN</label><input type="text" id="modalReAdmitHN" value="${patient.hn}">
+            <label>AN</label><input type="text" id="modalReAdmitAN" value="${patient.an}">
+            <label>แพทย์</label>
+            <select id="modalReAdmitDoctor">
+                ${allDoctors.map(doc => `<option value="${doc}" ${patient.doctor === doc ? 'selected' : ''}>${doc}</option>`).join('')}
+            </select>
+            <label>ตึก</label>
+            <select id="modalReAdmitBuilding">
+                <option value="ตึกชาย1" ${patient.building === 'ตึกชาย1' ? 'selected' : ''}>ตึกชาย1</option>
+                <option value="ตึกชาย2" ${patient.building === 'ตึกชาย2' ? 'selected' : ''}>ตึกชาย2</option>
+                <option value="ตึกหญิง" ${patient.building === 'ตึกหญิง' ? 'selected' : ''}>ตึกหญิง</option>
+                <option value="ตึกชายฟื้นฟู" ${patient.building === 'ตึกชายฟื้นฟู' ? 'selected' : ''}>ตึกชายฟื้นฟู</option>
+            </select>
+            <div class="modal-buttons">
+                <button id="confirmReAdmitBtn" style="background-color: #28a745;">ยืนยัน Re-Admit</button>
+                <button id="cancelReAdmitBtn" style="background-color: #dc3545;">ยกเลิก</button>
+            </div>
+        `;
+
+        document.getElementById("confirmReAdmitBtn").onclick = () => {
+            const newBuilding = document.getElementById("modalReAdmitBuilding").value;
+
+            if (currentBedCounts[newBuilding] <= 0) {
+                alert(`เตียงสำหรับตึก ${newBuilding} เต็มแล้ว ไม่สามารถ Re-Admit ได้`);
+                return;
+            }
+
+            const reAdmittedPatient = { ...patient };
+            reAdmittedPatient.id = Date.now().toString() + '_re';
+            reAdmittedPatient.previousAn = reAdmittedPatient.an; // เก็บ AN เดิมไว้
+            reAdmittedPatient.hn = document.getElementById("modalReAdmitHN").value;
+            reAdmittedPatient.an = document.getElementById("modalReAdmitAN").value;
+            reAdmittedPatient.doctor = document.getElementById("modalReAdmitDoctor").value;
+            reAdmittedPatient.building = newBuilding;
+            reAdmittedPatient.status = 'admitted';
+            reAdmittedPatient.admitDate = new Date().toISOString().slice(0, 10);
+
+            allPatients.push(reAdmittedPatient);
+
+            const dischargedPatientIndex = allPatients.findIndex(p => p.id === patientId);
+            if(dischargedPatientIndex !== -1) {
+                allPatients[dischargedPatientIndex].status = 'finalDischarged';
+            }
+
+            updateBedCount(reAdmittedPatient.building, false);
+
+            const rowToRemoveFromDischarge = document.querySelector(`#dischargeBody tr[data-patient-id="${patientId}"]`);
+            if (rowToRemoveFromDischarge) rowToRemoveFromDischarge.remove();
+
+            filterAdmitTable('all', document.querySelector('#admitTable .filter-buttons button:first-child'));
+            renderDischargeTable();
+            renderReAdmitTable();
+            updateDailySummaryTable();
+            updateBookingSummaryTable();
+            modalBg.remove();
+            alert("✅ Re-Admit สำเร็จ!");
+            saveDataToLocalStorage();
+        };
+
+        document.getElementById("cancelReAdmitBtn").onclick = () => {
+            modalBg.remove();
+        };
+    };
+    return button;
+}
+
+    // ฟังก์ชันสำหรับสร้างปุ่ม "กลับบ้าน" สำหรับตาราง Plan Discharge และ Discharge ฝากนอน
+    function createGoHomeButton(patientId, tableType) {
+      const btn = document.createElement('button');
+      btn.textContent = 'กลับบ้าน';
+      btn.style.cssText = "background-color: #3498db; color: white; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; min-width: 70px;";
+      btn.onmouseover = () => btn.style.backgroundColor = "#2980b9";
+      btn.onmouseout = () => btn.style.backgroundColor = "#3498db";
+
+      btn.onclick = () => {
+        const patient = allPatients.find(p => p.id === patientId);
+        if (patient) {
+          // Logic การคืนเตียงถูกย้ายไปที่ตอนกด Plan Discharge/Discharge ฝากนอนจาก Admit Table แล้ว
+          // ดังนั้น เมื่อกด "กลับบ้าน" จากตาราง Plan Discharge/Discharge ฝากนอน จะแค่เปลี่ยนสถานะเป็น finalDischarged
+          patient.status = 'finalDischarged'; // สถานะสุดท้ายคือออกไปแล้วจริงๆ
+
+          // ลบแถวออกจากตารางปัจจุบัน
+          const rowToRemove = document.querySelector(`#${tableType === 'planDischarge' ? 'planDischargeBody' : 'dischargeBody'} tr[data-patient-id="${patientId}"]`);
+          if (rowToRemove) rowToRemove.remove();
+
+          updateDailySummaryTable();
+          updateBookingSummaryTable();
+          alert(`✅ ผู้ป่วยกลับบ้านสำเร็จจากตาราง ${tableType === 'planDischarge' ? 'Plan Discharge' : 'Discharge ฝากนอน'}`);
+          saveDataToLocalStorage();
+        }
+      };
+      return btn;
+    }
+
+    // ฟังก์ชันสำหรับกรองตาราง Admit
+    function filterAdmitTable(buildingFilter, clickedButton) {
+        const admitTableBody = document.getElementById("admitDataBody");
+        if (!admitTableBody) return;
+
+        // Reset active button
+        const buttons = document.querySelectorAll('#admitTable .filter-buttons button');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        if (clickedButton) clickedButton.classList.add('active'); // Ensure clickedButton exists
+
+        // Clear current table
+        admitTableBody.innerHTML = '';
+
+        // Populate table with filtered data
+        allPatients.forEach(patient => {
+            // ดึงเฉพาะผู้ป่วยที่แอดมิดแล้ว หรือ Plan Discharge แล้ว (ยังอยู่ใน Admit Table)
+            if (patient.status === 'admitted' || patient.status === 'planDischarge') {
+                if (buildingFilter === 'all' || patient.building === buildingFilter) {
+                    const row = document.createElement("tr");
+                    row.dataset.patientId = patient.id;
+                    row.innerHTML = `
+                        <td>${patient.name}</td>
+                        <td>${patient.hn}</td>
+                        <td>${patient.an}</td>
+                        <td>${patient.doctor}</td>
+                        <td>${patient.building}</td>
+                        <td>${patient.admitDate || 'N/A'}</td>
+                        <td></td> <td>${patient.status === 'planDischarge' ? 'Plan Discharge' : ''}</td> `;
+                    // สร้างปุ่มสถานะในเซลล์ที่ 7 (index 6)
+                    const statusCell = row.cells[6];
+                    statusCell.appendChild(createStatusButtons(patient.id));
+                    admitTableBody.appendChild(row);
+                }
+            }
+        });
+        saveDataToLocalStorage();
+    }
+
+    // ฟังก์ชันสำหรับแสดงข้อมูลในตารางการจอง (Booking Table)
+    function renderBookingTable() {
+        const bookingDataBody = document.getElementById("bookingDataBody");
+        if (!bookingDataBody) return;
+        bookingDataBody.innerHTML = ''; // Clear current table
+
+        allPatients.forEach(patient => {
+            if (patient.status === 'booked') {
+                const newRow = document.createElement("tr");
+                newRow.dataset.patientId = patient.id;
+                newRow.innerHTML = `
+                    <td>${patient.name}</td>
+                    <td>${patient.hn}</td>
+                    <td>${patient.an}</td>
+                    <td>${patient.doctor}</td>
+                    <td>${patient.building}</td>
+                    <td>${patient.bookDate}</td>
+                    <td></td>
+                `;
+                newRow.lastElementChild.appendChild(createAdmitButton(patient.id));
+                bookingDataBody.appendChild(newRow);
+            }
+        });
+        saveDataToLocalStorage();
+    }
+
+    // ฟังก์ชันสำหรับแสดงข้อมูลในตาราง Plan Discharge
+    function renderPlanDischargeTable() {
+        const planDischargeBody = document.getElementById("planDischargeBody");
+        if (!planDischargeBody) return;
+        planDischargeBody.innerHTML = ''; // Clear current table
+
+        allPatients.forEach(patient => {
+            if (patient.status === 'planDischarge') {
+                const newRow = document.createElement("tr");
+                newRow.dataset.patientId = patient.id;
+                newRow.innerHTML = `
+                    <td>${patient.name}</td>
+                    <td>${patient.hn}</td>
+                    <td>${patient.an}</td>
+                    <td>${patient.doctor}</td>
+                    <td>${patient.building}</td>
+                    <td>${patient.admitDate || 'N/A'}</td>
+                    <td></td>
+                `;
+                // สร้างปุ่มกลับบ้านในเซลล์สุดท้าย
+                const statusCell = newRow.querySelector('td:last-child');
+                statusCell.appendChild(createGoHomeButton(patient.id, 'planDischarge'));
+                planDischargeBody.appendChild(newRow);
+            }
+        });
+        saveDataToLocalStorage();
+    }
+
+    // ฟังก์ชันสำหรับแสดงข้อมูลในตาราง Discharge ฝากนอน
+    function renderDischargeTable() {
+        const dischargeBody = document.getElementById("dischargeBody");
+        if (!dischargeBody) return;
+        dischargeBody.innerHTML = ''; // Clear current table
+
+        allPatients.forEach(patient => {
+            if (patient.status === 'discharged') { // ตรวจสอบสถานะ discharged
+                const newRow = document.createElement("tr");
+                newRow.dataset.patientId = patient.id;
+                newRow.innerHTML = `
+                    <td>${patient.name}</td>
+                    <td>${patient.hn}</td>
+                    <td>${patient.an}</td>
+                    <td>${patient.doctor}</td>
+                    <td>${patient.building}</td>
+                    <td>${patient.admitDate || 'N/A'}</td>
+                    <td></td> <td></td> `;
+                // สร้างปุ่มกลับบ้านในเซลล์ที่ 7 (index 6)
+                newRow.cells[6].appendChild(createGoHomeButton(patient.id, 'discharged'));
+                // สร้างปุ่ม Re-Admit ในเซลล์ที่ 8 (index 7)
+                newRow.cells[7].appendChild(createReAdmitButton(patient.id));
+                dischargeBody.appendChild(newRow);
+            }
+        });
+        saveDataToLocalStorage();
+    }
+
+    // ฟังก์ชันสำหรับแสดงข้อมูลในตาราง Re-Admit ใหม่
+function renderReAdmitTable() {
+    const reAdmitBody = document.getElementById("reAdmitBody");
+    if (!reAdmitBody) return;
+    reAdmitBody.innerHTML = '';
+
+    allPatients.forEach(patient => {
+        if (patient.status === 'admitted' && patient.id.endsWith('_re')) {
+            const newRow = document.createElement("tr");
+            newRow.dataset.patientId = patient.id;
+            newRow.innerHTML = `
+                <td>${patient.name}</td>
+                <td>${patient.hn}</td>
+                <td>${patient.an}</td>
+                <td>${patient.doctor}</td>
+                <td>${patient.building}</td>
+                <td>${patient.admitDate || 'N/A'}</td>
+                <td>Re-Admitted</td>
+                <td>${patient.previousAn || 'ไม่มีข้อมูล'}</td>
+            `;
+            reAdmitBody.appendChild(newRow);
+        }
+    });
+    saveDataToLocalStorage();
+}
+
+
+
+    // ฟังก์ชันสำหรับสร้างหรืออัปเดตตารางสรุปยอดการจอง
+    function updateBookingSummaryTable() {
+      const summaryBody = document.getElementById("bookingSummaryBody");
+      if (!summaryBody) return;
+
+      summaryBody.innerHTML = '';
+
+      const finalSummary = {};
+      allPatients.forEach(patient => {
+        if (patient.bookDate) {
+          if (!finalSummary[patient.bookDate]) {
+            finalSummary[patient.bookDate] = { totalBooked: 0, admittedCount: 0, waitingCount: 0 };
+          }
+          // นับจำนวนที่จองเข้ามาทั้งหมดในวันที่จอง
+          finalSummary[patient.bookDate].totalBooked++;
+
+          // นับผู้ป่วยที่ "เคย" แอดมิด (รวมถึง Plan Discharge, Discharge ฝากนอน, และ Re-Admitted) แต่ไม่รวม finalDischarged
+          if (patient.status === 'admitted' || patient.status === 'planDischarge' || patient.status === 'discharged' || patient.id.endsWith('_re')) {
+            finalSummary[patient.bookDate].admittedCount++;
+          }
+        }
+      });
+
+      for (const date in finalSummary) {
+        finalSummary[date].waitingCount = finalSummary[date].totalBooked - finalSummary[date].admittedCount;
+        if (finalSummary[date].waitingCount < 0) {
+          finalSummary[date].waitingCount = 0;
+        }
+      }
+
+      const sortedDates = Object.keys(finalSummary).sort();
+
+      sortedDates.forEach(date => {
+        const data = finalSummary[date];
+        const row = summaryBody.insertRow();
+        row.insertCell().textContent = date;
+        row.insertCell().textContent = data.totalBooked;
+        row.insertCell().textContent = data.admittedCount;
+        row.insertCell().textContent = data.waitingCount;
+      });
+      saveDataToLocalStorage();
+    }
+
+    // ฟังก์ชันสำหรับสร้างหรืออัปเดตตารางสรุปยอดรายวัน
+    function updateDailySummaryTable() {
+      const dailySummaryBody = document.getElementById("dailySummaryBody");
+      if (!dailySummaryBody) return;
+
+      dailySummaryBody.innerHTML = '';
+
+      const buildingSummaries = {};
+
+      // Initialize buildingSummaries with all known buildings and all doctors
+      Object.keys(initialBedCounts).forEach(building => {
+          buildingSummaries[building] = {
+              admitted: 0,
+              planDischarge: 0,
+              discharged: 0, // สำหรับ discharged ฝากนอน
+              doctors: {} // { 'แพทย์A': 0, 'แพทย์B': 0 }
+          };
+          // Initialize all doctors for each building to 0
+          allDoctors.forEach(doctor => {
+              buildingSummaries[building].doctors[doctor] = 0;
+          });
+      });
+
+      allPatients.forEach(patient => {
+        const building = patient.building;
+        if (buildingSummaries[building]) {
+          // นับผู้ป่วยที่แอดมิด (รวมถึงผู้ป่วยที่ Re-Admit และมีสถานะเป็น admitted)
+          if (patient.status === 'admitted' || patient.status === 'planDischarge') { // Re-Admitted Patients also have status 'admitted'
+            buildingSummaries[building].admitted++;
+            if (patient.doctor && patient.doctor !== 'รอข้อมูล' && buildingSummaries[building].doctors.hasOwnProperty(patient.doctor)) {
+              buildingSummaries[building].doctors[patient.doctor]++;
+            }
+          }
+          if (patient.status === 'planDischarge') {
+            buildingSummaries[building].planDischarge++;
+          }
+          if (patient.status === 'discharged') { // นับเฉพาะผู้ป่วยที่ Discharge ฝากนอน ที่ยังไม่ได้ finalDischarged
+            buildingSummaries[building].discharged++;
+          }
+        }
+      });
+
+      // Loop through all buildings and create rows
+      for (const buildingName in buildingSummaries) {
+        const summary = buildingSummaries[buildingName];
+        const row = dailySummaryBody.insertRow();
+
+        row.insertCell().textContent = buildingName; // ชื่อตึกผู้ป่วย
+        row.insertCell().textContent = summary.admitted; // จำนวนผู้ป่วยที่แอดมิด (รวม Plan Discharge และ Re-Admit ที่สถานะ admitted)
+
+        const bedsLeft = currentBedCounts[buildingName];
+        row.insertCell().textContent = bedsLeft + " เตียง";
+
+        // แพทย์ผู้รับผิดชอบ
+        const doctorCell = row.insertCell();
+        // เรียงลำดับแพทย์ตามชื่อเพื่อให้แสดงผลสม่ำเสมอ
+        const sortedDoctors = [...allDoctors].sort();
+        if (sortedDoctors.length > 0) {
+            sortedDoctors.forEach(doctor => {
+                const count = summary.doctors[doctor] || 0; // Get count, default to 0 if no patients
+                const div = document.createElement('div');
+                div.textContent = `${doctor} (${count} คน)`;
+                doctorCell.appendChild(div);
+            });
+        } else {
+            doctorCell.textContent = 'ไม่มีข้อมูลแพทย์'; // กรณีไม่มีแพทย์ในระบบเลย
+        }
+
+
+        row.insertCell().textContent = summary.planDischarge; // จำนวนผู้ป่วยที่ Plan Discharge
+        row.insertCell().textContent = summary.discharged; // จำนวนผู้ป่วยที่ Discharge ฝากนอน
+      }
+      saveDataToLocalStorage();
+    }
+
+    // Event Listener สำหรับฟอร์มจองเตียง
+    document.getElementById("bookingForm")?.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const hn = document.getElementById("hn").value;
+      const an = document.getElementById("an").value;
+      const doctor = document.getElementById("doctor").value;
+      const building = document.getElementById("building").value;
+      const date = document.getElementById("date").value;
+
+      if (!name || !hn || !an || !doctor || !building || !date) {
+        alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+        return;
+      }
+
+      const patientId = Date.now().toString(); // ใช้ Timestamp เป็น ID ที่ไม่ซ้ำกัน
+
+      allPatients.push({
+        id: patientId,
+        name: name,
+        hn: hn,
+        an: an,
+        doctor: doctor,
+        building: building,
+        bookDate: date,
+        admitDate: null, // ยังไม่มี admitDate ในตอนจอง
+        status: 'booked'
+      });
+
+      // Render the booking table to show the new entry
+      renderBookingTable(); // เรียก renderBookingTable เพื่ออัปเดตตารางการจอง
+
+      const success = document.getElementById("success");
+      if (success) {
+          success.style.display = "block";
+          setTimeout(() => {
+            success.style.opacity = "1";
+            success.style.transition = "opacity 0.5s ease";
+            setTimeout(() => {
+              success.style.opacity = "0";
+              setTimeout(() => {
+                success.style.display = "none";
+                document.getElementById("bookingForm").reset();
+              }, 500);
+            }, 2500);
+          }, 100);
+      }
+      updateBookingSummaryTable();
+      updateDailySummaryTable();
+      saveDataToLocalStorage();
+    });
+
+    // ฟังก์ชันสำหรับบันทึกข้อมูลลง Local Storage
+    function saveDataToLocalStorage() {
+        localStorage.setItem('allPatients', JSON.stringify(allPatients));
+        localStorage.setItem('currentBedCounts', JSON.stringify(currentBedCounts));
+    }
+
+    // ฟังก์ชันสำหรับโหลดข้อมูลจาก Local Storage
+    function loadDataFromLocalStorage() {
+        const storedPatients = localStorage.getItem('allPatients');
+        const storedBedCounts = localStorage.getItem('currentBedCounts');
+
+        if (storedPatients) {
+            allPatients = JSON.parse(storedPatients);
+        }
+        // ตรวจสอบว่า currentBedCounts มีค่าหรือไม่ ถ้าไม่มี ให้ใช้ initialBedCounts
+        if (storedBedCounts) {
+            currentBedCounts = JSON.parse(storedBedCounts);
+            // ตรวจสอบความถูกต้องของ currentBedCounts หากบางตึกหายไป ให้ใช้ค่าเริ่มต้น
+            for (const key in initialBedCounts) {
+                if (!(key in currentBedCounts)) {
+                    currentBedCounts[key] = initialBedCounts[key];
+                }
+            }
+        } else {
+            currentBedCounts = { ...initialBedCounts }; // ถ้าไม่มีข้อมูลเตียงเลย ให้ใช้ค่าเริ่มต้น
+        }
+    }
+// ฟังก์ชันสำหรับรีเซ็ตข้อมูลทั้งหมด
+function resetData() {
+    if (confirm("คุณแน่ใจหรือไม่ว่าต้องการรีเซ็ตข้อมูลทั้งหมด? การกระทำนี้ไม่สามารถย้อนกลับได้!")) {
+        // ลบข้อมูลจาก Local Storage
+        localStorage.removeItem('allPatients');
+        localStorage.removeItem('currentBedCounts');
+
+        // รีเซ็ตค่าตัวแปรใน JavaScript
+        allPatients = [];
+        currentBedCounts = { ...initialBedCounts }; // ใช้ Spread operator เพื่อคัดลอกค่า ไม่ใช่การอ้างอิง
+
+        // อัปเดต UI ให้แสดงผลข้อมูลที่รีเซ็ตแล้ว
+        updateDashboardBedCounts();
+        renderBookingTable();
+        filterAdmitTable('all', document.querySelector('#admitTable .filter-buttons button:first-child'));
+        renderPlanDischargeTable();
+        renderDischargeTable();
+        renderReAdmitTable(); // อัปเดตตาราง Re-Admit
+        updateBookingSummaryTable();
+        updateDailySummaryTable();
+
+        alert("✅ ข้อมูลถูกรีเซ็ตสำเร็จ!");
+        showSection('form'); // กลับไปหน้าฟอร์มหลังจากรีเซ็ต
+    }
+}
+
+    // เรียกใช้ฟังก์ชันเมื่อโหลดหน้าเว็บ
+    document.addEventListener("DOMContentLoaded", () => {
+      loadDataFromLocalStorage(); // โหลดข้อมูลเมื่อเริ่มต้น
+      showSection('form'); // แสดง form เป็นค่าเริ่มต้น (หรืออะไรก็ได้ที่คุณต้องการให้เริ่ม)
+      updateDashboardBedCounts(); // อัปเดตข้อมูลใน dashboard
+      updateBookingSummaryTable(); // อัปเดตตารางสรุปการจอง
+      updateDailySummaryTable(); // อัปเดตตารางสรุปรายวัน
+
+      // Render ตารางทั้งหมดที่ควรจะมีข้อมูลเมื่อโหลดหน้า
+      renderBookingTable();
+      // เรียก filterAdmitTable เพื่อแสดงตาราง Admit Table ตอนโหลดครั้งแรก
+      filterAdmitTable('all', document.querySelector('#admitTable .filter-buttons button:first-child'));
+      renderPlanDischargeTable();
+      renderDischargeTable();
+      renderReAdmitTable(); // เรียกใช้ renderReAdmitTable เมื่อโหลดหน้า
+    });
+  </script>
+</body>
+</html>
